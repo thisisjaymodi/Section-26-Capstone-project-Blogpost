@@ -1,0 +1,18 @@
+Post Website
+
+Routing: Home
+
+Show all current posts from array/object - [Title][Text Text]
+	All postes display edit / delete button
+	Edit will open the test box
+		Save Post / cancle edit
+		Delete post will remove the post
+Button to create New post.  [Title][Text Text]
+	New post save / cancle
+	
+	
+IMP parts
+
+CSS layout
+Box with title, content.
+hidden box with title, content.
