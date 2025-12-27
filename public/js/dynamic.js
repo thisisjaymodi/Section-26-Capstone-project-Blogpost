@@ -1,6 +1,3 @@
-
-
-
 // Getting Model window input fields
 const inputPid = $("#exampleModalEdit #update-pid, #exampleModalDelete #delete-pid");;
 const inputTitle = $("#exampleModalEdit #update-title");
@@ -26,8 +23,39 @@ $("#exampleModalDelete").on("show.bs.modal", (e) =>{
     
     // Getting data from Page
     const dataPid = clickedBtn.data("pid");
-    
-
     inputPid.val(dataPid);
-    
 });
+
+// Getting user location from frontend
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+    //   console.log(latitude,longitude);
+    // passing location to backend
+      fetch("/api/location", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ latitude, longitude }),
+      })
+    //   receiving the weather info from server
+        .then((res) => res.json())
+    //   Printing info to frontend
+        .then((data) => {
+          document.getElementById("weather").innerText = `${data.temp} degree celsius`;
+        })
+        .catch(function (res) {
+        //   console.log(res);
+        });
+    },
+    (err) => {
+      console.error("Geolocation error:", err);
+    }
+  );
+} else {
+  console.log("Geolocation not supported");
+}
+

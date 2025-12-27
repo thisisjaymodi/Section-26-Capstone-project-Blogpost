@@ -1,5 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
+import axios from "axios";
 
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -10,20 +11,53 @@ import methodOverride from "method-override";
 const app = express();
 const port = 3000;
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const api_key = "FZYGi6wwWJ+LBRmsMkYeug==hygvyQCFzhPhxXcn";
+const quoteURL = "https://api.api-ninjas.com/v2/randomquotes";
+const weatherURL = "https://api.api-ninjas.com/v1/weather"
 
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended:true }));
 app.use(express.static("public"));
 app.use(methodOverride("_method"));
 
-app.get("/",(req, res) => {
-    res.locals.posts = posts;    
-    res.render(`${__dirname}/views/index.ejs`);
+
+
+
+const config = {
+    headers: {
+      "X-Api-Key": api_key
+  }
+}
+
+app.get("/", async (req, res) => {
+  res.locals.posts = posts;
+  const result = await getQuote();
+
+  if (result["error"]) {
+    res.render(`index.ejs`, { error: result["error"] });
+  }
+  res.render(`index.ejs`, {
+    quote: result["quote"],
+    author: result["author"]    
+  });
 });
 
 app.post("/submit",(req, res) => {
     addPost(req.body.title,req.body.content);
     res.redirect("/");
 });
+
+app.post("/api/location", async (req, res) => {
+  const { latitude, longitude } = req.body;
+  console.log("Client location:", latitude, longitude); 
+  
+  const weatherData = await getWeatherData(latitude,longitude);
+  if (weatherData["error"]) {
+    res.render(`index.ejs`, { error: weatherData["error"] });
+  }
+   res.json({ temp: weatherData.temp });
+});
+
 
 app.put("/update", (req, res) => {
     editPost(req.body.pid,req.body.title,req.body.content);
@@ -78,7 +112,25 @@ function deletePost(strPid){
     console.log(posts);
 }
 
+async function getQuote() {
+  try {
+    const result = await axios.get(quoteURL, config);
+    let [{ quote, author }] = result.data;
+    return { quote, author };
+  } catch (error) {
+    return {error:error.message};
+  }
+}
 
+async function getWeatherData(lt,ln) {
+    try {
+      const result = await axios.get(`${weatherURL}?lat=${lt}&lon=${ln}`,config)
+      let {temp} = result.data;
+      return {temp};
+    } catch (error) {
+        return {error:error.message };
+    }
+}
 
 
 
