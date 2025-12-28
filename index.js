@@ -4,7 +4,7 @@ import axios from "axios";
 
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import { log } from "console";
+import { error, log } from "console";
 import methodOverride from "method-override";
 
 
@@ -53,7 +53,7 @@ app.post("/api/location", async (req, res) => {
   
   const weatherData = await getWeatherData(latitude,longitude);
   if (weatherData["error"]) {
-    res.render(`index.ejs`, { error: weatherData["error"] });
+    res.json({ error: weatherData["error"] });
   }
    res.json({ temp: weatherData.temp });
 });

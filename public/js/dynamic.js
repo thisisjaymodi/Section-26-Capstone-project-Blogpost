@@ -26,36 +26,43 @@ $("#exampleModalDelete").on("show.bs.modal", (e) =>{
     inputPid.val(dataPid);
 });
 
-// Getting user location from frontend
-if ("geolocation" in navigator) {
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude, longitude } = pos.coords;
-    //   console.log(latitude,longitude);
-    // passing location to backend
-      fetch("/api/location", {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ latitude, longitude }),
-      })
-    //   receiving the weather info from server
-        .then((res) => res.json())
-    //   Printing info to frontend
-        .then((data) => {
-          document.getElementById("weather").innerText = `${data.temp} degree celsius`;
-        })
-        .catch(function (res) {
-        //   console.log(res);
-        });
-    },
-    (err) => {
-      console.error("Geolocation error:", err);
-    }
-  );
-} else {
-  console.log("Geolocation not supported");
-}
 
+if ("geolocation" in navigator) {
+    /* geolocation is available */
+    async function locationSuccess(pos) {
+      try {
+        const crd = pos.coords;
+        console.log(crd["latitude"], crd["longitude"]);
+        const config = {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+          body: JSON.stringify({
+            latitude: crd["latitude"],
+            longitude: crd["longitude"],
+          }),
+        };
+        /* Response sent to backend */
+        const response = await fetch("/api/location", config);
+        if (!response.ok) {
+            throw new Error(response.json()["error"]); /* we are sending server-side error to frontend */
+        }
+        /* Retrieve the response */
+        const data = await response.json();
+        console.log(data["temp"]);
+        document.getElementById("weather").innerHTML =
+          data["temp"] + " degree celsius";
+      } catch (error) {
+            document.getElementById("weather").innerHTML = error;
+      }
+    }
+    function locationError(error){
+        document.getElementById("weather").innerHTML = "Geolocation denied by user."
+    }
+    let loc = navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
+} else {
+  console.log("geolocation is not available");
+  document.getElementById("weather").innerHTML = "Geolocation is not available."
+}
